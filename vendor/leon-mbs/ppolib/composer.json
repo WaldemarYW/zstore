@@ -1,0 +1,15 @@
+{
+    "name": "leon-mbs/ppolib",
+    "description": "Библиотека  цифровой подписи для ПРРО (Украина)",
+    "license" : "MIT",
+    "homepage": "https://github.com/leon-mbs/ppolib",
+    "require": {
+        "php": ">7.4.0",
+        "sop/asn1": "~4.1.1" 
+    },
+ 
+ 
+    "autoload" : {
+        "files" : ["src/autoload.php"]
+    }
+}

@@ -1,0 +1,352 @@
+<html>
+    <head>
+        <title> Товари на складі  </title>
+
+   
+        <link rel="stylesheet" href="/assets/css/ekko-lightbox.css">
+        <script src="/assets/js/ekko-lightbox.js" type="text/javascript"></script>
+
+    </head>
+
+    <body>
+        <div class="row">
+
+            <div class="col-12    " zippy="itempanel">
+                <h3>Товари на складі </h3>
+                <div class="card  ">
+                    <form zippy="filter" class="row   g-2 align-items-center">
+                        <div class="col-auto">
+       
+                        <input autofocus="on" autocomplete="off" placeholder="Пошук..." class="form-control mr-sm-2" type="search"     onkeydown="onSearch()" zippy="searchkey">
+                       </div>
+                       <div class="col-auto"> 
+                           <div class=" row no-gutters"> 
+
+                        <label class="col-auto mt-2" for="searchcat">категорія</label>
+                                 <div class="col-auto">
+
+                        <select class="form-control mr-sm-2" zippy="searchcat">
+                            <option value="0">Не задано</option>
+                        </select>
+                        </div>
+                        </div>
+                        </div>
+                       <div class="col-auto"> 
+                           <div class=" row no-gutters"> 
+                               <label class="col-auto mt-2" for="searchstore">Склад</label>
+                               <div class="col-auto">
+                                    <select class="form-control mr-sm-2" zippy="searchstore">
+                                        <option value="0">По всім</option>
+                                    </select>
+                              </div>
+                           </div>
+                        </div>
+                        {{#storeemp}}
+                      <div class="col-auto"> 
+                           <div class=" row no-gutters"> 
+                               <label class="col-auto mt-2" for="searchemp">Співробітник</label>
+                               <div class="col-auto">
+                                    <select class="form-control mr-sm-2" zippy="searchemp">
+                                        <option value="0">Не вказано</option>
+                                    </select>
+                              </div>
+                           </div>
+                      </div>
+                       {{/storeemp}}
+                       <div class="col-auto"> 
+                           <div class=" row no-gutters"> 
+                      <label class="col-auto mt-2" for="searchprice">Сума по  </label>
+
+                                 <div class="col-auto">
+                      <select class="form-control mr-sm-2" zippy="searchprice">
+                            
+                        </select>
+                          </div>
+                          </div>
+                        </div>
+                       <div class="col-auto"> 
+                           <div class=" row no-gutters"> 
+                      <label class="col-auto mt-2" for="searchbrand">Бренд </label>
+                         <div class="col-auto">
+                      <input autocomplete="off"   class="form-control mr-2" zippy="searchbrand"/>
+                     </div>
+                     </div>
+                     </div>
+                           <div class="col-auto">
+                       <select class="form-control mr-sm-2" zippy="searchqty">
+                            <option value="0">На  складі </option>
+                            <option value="1">В  мінусі </option>
+                            <option value="2">Всі </option>
+                        </select>
+
+                      </div>
+                      
+                 <div class="col-auto">  
+                          <div class=" row no-gutters"> 
+                              <label class="col-auto mt-2"  for="searchtype">Тип</label>
+                          <div class="col-auto">
+                            <select zippy="searchtype" class="form-control mr-sm-2">
+                                <option value="0">Всі</option>
+                                <option value="1">Товари</option>
+                                <option value="2">Матеріали та комплектуючі</option>
+                                <option value="3">МШП</option>
+                                <option value="4">Готова продукція</option>
+                                <option value="5">Напівфабрикати</option>
+
+                            </select>
+                          </div>
+                       </div>
+                      </div>                      
+                      {{#usesnumberdate}}
+                       <div class="col-auto">
+                             <div class="  form-check">
+                                <input zippy="searchterm" type="checkbox" class="form-check-input">
+                                <label class="form-check-label" for="searchterm">просроченi</label>
+                             </div>
+                      </div>
+                        {{/usesnumberdate}}
+                       <div class="col-auto">
+                      <input class="btn btn-outline-success  " type="submit" value="ОК">
+                      </div>
+                    
+                   
+                   </form>
+                </div>
+                <a zippy="csv">Експорт у Excel</a>
+                <a zippy="printqty" class=" ml-4  " title="Друкувати вiдфiльтрованi по кiлькостi наявних"> <i class="fa fa-print"></i> </a>
+                <table class="table      table-sm  table-hover ">
+                    <tr>
+                        {{#useimages}}
+                        <th></th>
+                        {{/useimages}}
+
+                        <th>Назва</th>
+
+
+                        <th>Код</th>
+                        <th>Категорія</th>
+                        <th>Бренд</th>
+                          {{#usecf}}
+                            <th>Каст. поля</th>
+                             {{/usecf}}
+                        <th>Од.</th>
+                        <th> <i title="Комірка" class="fa fa-box"></i> </th>     
+
+                        <th class="text-right  ">Кіл.</th>
+  <th class="text-right  "> <i title="Зарезервовано" class="fa fa-archive"></i> </th>     
+  <th class="text-right  "> <i title="В закупці" class="fa fa fa-truck"></i> </th>     
+                        
+   {{^noshowpartion}}                         
+                        <th class="text-right  ">Обл. ціна</th>
+   {{/noshowpartion}}         
+   
+   {{^nohowprodprice}}       
+                        <th class="text-right  ">Прод. ціна</th>
+   {{/nohowprodprice}}                               
+                        <th class="text-right  ">На суму</th>
+
+                                           
+
+
+                        <th  ></th>
+                    
+
+
+                    </tr>
+                    <tr zippy="itemlist">
+                        {{#useimages}}
+                        <td>
+                            <a zippy="imagelistitem" data-type="image" data-toggle="lightbox" data-gallery="thumb"> <img
+                                    style="float:left; width:64px"></a>
+
+                        </td>
+                        {{/useimages}}
+
+                        <td ><a zippy="itemname"></a></td>
+
+                        <td zippy="code" class=" text-nowrap"></td>
+                        <td zippy="cat_name"></td>
+                        <td zippy="brand"></td>
+                              {{#usecf}}
+                            <td zippy="cfval"> </td>
+                             {{/usecf}} 
+                        <td zippy="msr"></td>
+                        <td zippy="cell"></td>
+
+                        <td zippy="iqty" class="text-right  "></td>
+                        <td zippy="iqtyr" class="text-right  "></td>
+                        <td zippy="iqtyb" class="text-right  "></td>
+                        
+                           {{^noshowpartion}} 
+                        <td zippy="inprice" class="text-right  "></td>
+                           {{/noshowpartion}} 
+         
+                   {{^nohowprodprice}}       
+                        <td zippy="iprodprice" class="text-right  "></td>
+                   {{/nohowprodprice}}                               
+                        <td zippy="iamount" class="text-right  "></td>
+
+                            
+
+                        <td>
+                       
+                            <a zippy="show" title="Детальна інформація"><i class="fa fa-eye"></i></a>
+                         
+                        </td>
+                        
+
+
+                    </tr>
+                    <tr>
+                        <td colspan="10" class="  font-weight:bolder"> Всього на суму: <span zippy="totamount"></span> </td>
+
+                    </tr>
+                </table>
+                <div zippy="pag"></div>
+
+            </div>
+            <div class="col-12 col-md-10 col-xl-8" zippy="detailpanel">
+             <div class="row">
+              <div class="col-12 mb-4">
+                <a zippy="back"> <i class="fa fa-arrow-circle-left"></i> До переліку</a>
+                <h3 zippy="itemdetname"></h3>
+                
+            {{^noshowpartion}}                 
+                <h5> Партiї облiку  </h5>
+                <table class="table   table-responsive-sm   table-sm  table-hover ">
+                    <tr>
+                        <th>Склад</th>
+                         {{#storeemp}}
+                        <th>Спiвробiтник</th>
+                         {{/storeemp}}
+                        {{#usesnumber}}
+                        <th class="text-right text-nowrap">Серія</th>
+
+                        <th class="text-right text-nowrap">Придатний до</th>
+                        {{/usesnumber}}
+                        <th class="text-right text-nowrap">Обл. ціна</th>
+            
+                        <th class="text-right text-nowrap">Кіл.</th>
+                        <th class="text-right text-nowrap">На суму</th>
+                  
+                 
+
+                          <th  > </th>
+
+                    </tr>
+                    <tr zippy="stocklist">
+                        <td zippy="storename"></td>
+                        {{#storeemp}}
+                         <td zippy="emp_name"></td>
+                         {{/storeemp}}                        
+                        {{#usesnumber}}
+                        <td zippy="snumber" class="text-right  "></td>
+                        <td zippy="sdate" class="text-right  "></td>
+
+                        {{/usesnumber}}
+                        <td zippy="partion" class="text-right  "></td>
+                
+
+                        <td zippy="qty" class="text-right  "></td>
+                        <td zippy="amount" class="text-right  "></td>
+
+
+                         <td  ><a zippy="createmove" >Перемiстити партiю</a></td>
+
+
+                    </tr>
+                </table>
+                <small><i class="fa fa-exclamation-triangle"></i> Скоригувати партiї, наприклад, якщо утворився мiнус можна
+                    документом Перемiщення партiй.</small>
+             {{/noshowpartion}} 
+              </div>
+              
+              
+                <div class="col-6  ">
+                     <b>Остання продажа</b> <br>
+                  {{i_lastsell}}  <br>
+                     {{i_avgout}} <br>                 
+                     <b>Вiдпускнi цiни</b> <br>
+                    <table class="ctable">
+                      {{#i_plist}}
+                      <tr><td>{{i_pricename}}</td><td class="text-right">{{i_price}}</td></tr>
+                      {{/i_plist}}
+                      
+                    </table> 
+                   
+               </div>
+               
+                {{^noshowpartion}} 
+                <div class="col-6">
+                     <b>Остання закупка</b><br>
+                      {{i_lastbay}}  <br>
+                     {{#useval}}
+                       Валюта  {{i_rate}} <br>
+                     {{/useval}}  
+                 
+                     <form zippy="iformbay" class="form-inline mt-4">
+                       <label>Кiл.</label> 
+                       <input  required="on"  style="width:120px;" zippy="iformbayqty"  pattern="[0-9\.]+" class="form-control priceqty" >
+                       <input title="Додати в заявку постачальнику"   type="submit" value="В закупку"  class="btn btn-info" >
+                     </form>
+                     
+
+                     
+               </div>
+               
+                {{/noshowpartion}} 
+               
+             </div>
+            </div>
+
+
+        </div>
+        
+<div id="pform" class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog  ">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <table>
+                            <tr>
+                                <td align="center" id="tag"></td>
+                            </tr>
+                            <tr>
+                                <td align="center"><a href="javascript:void(0)"
+                                                      onclick="$('#tag').printThis();$('#pform').modal('hide')"
+                                                      class="btn btn-success  ">Друк</a></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <script>
+            function check_delete() {
+                return confirm("Видалити партію?")
+            }
+
+            $(document).ready(function () {
+
+                $(document).on('click', '[data-toggle="lightbox"]', function (event) {
+                    event.preventDefault();
+                    $(this).ekkoLightbox({'alwaysShowClose': true});
+                });
+
+        
+
+
+            });
+
+            function onSearch(ele) {
+
+                if (event.key === 'Enter' || event.keyCode == 13) {
+                    // alert($('#barcode').val());
+                    $('#filter').submit();
+                }
+            }
+        </script>
+    </body>
+</html>
