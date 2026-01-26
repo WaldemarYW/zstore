@@ -115,6 +115,20 @@ body {
     color: #000;
 }
 
+@media (max-width: 575.98px) {
+    .smartmenu-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 6px;
+    }
+
+    .smartmenu-mobile .btn {
+        width: 100%;
+        text-align: left;
+    }
+}
+
 .footer {
     background-color: black;
     color: #fff;
@@ -170,5 +184,4 @@ a {
             body {
               margin-top: 0mm !important;
             }
-
 

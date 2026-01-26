@@ -939,8 +939,16 @@
                         <div class="col-12    ">
                             {{#smart}}
 
-                            <div style="justify-content: space-between" class="card">
+                            <div style="justify-content: space-between" class="card d-none d-sm-block">
                                 {{{smart}}} 
+                                
+                                 {{#isadmins}}
+                                 <small><a href="/index.php?p=App/Pages/Roles" title="Налаштування оперативного меню"><i class="fa fa-cog"></i> </a> </small>
+                                 {{/isadmins}}
+                                 
+                            </div>
+                            <div style="justify-content: space-between" class="card d-block d-sm-none smartmenu-mobile">
+                                {{{smart}}}
                                 
                                  {{#isadmins}}
                                  <small><a href="/index.php?p=App/Pages/Roles" title="Налаштування оперативного меню"><i class="fa fa-cog"></i> </a> </small>
