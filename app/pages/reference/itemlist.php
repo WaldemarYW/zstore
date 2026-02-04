@@ -722,9 +722,7 @@ class ItemList extends \App\Pages\Base
         }
 
         $this->Reload(false);
-
-        $this->itemtable->setVisible(true);
-        $this->itemdetail->setVisible(false);
+        $this->openItemById((int)$this->_item->item_id);
     }
 
     
