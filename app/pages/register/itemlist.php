@@ -59,8 +59,11 @@ class ItemList extends \App\Pages\Base
             $prices[$k] = $v ;
         }
 
-        $keys=array_keys($prices);
-        $p=array_shift($keys);
+        $p = 'price1';
+        if (!isset($prices[$p])) {
+            $keys = array_keys($prices);
+            $p = array_shift($keys);
+        }
 
         $this->filter->add(new DropDownChoice('searchprice', $prices, $p));
         $storelist = Store::getList() ;
