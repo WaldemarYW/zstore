@@ -320,7 +320,7 @@ class ItemList extends \App\Pages\Base
 
         $this->itempanel->setVisible(false);
         $this->detailpanel->setVisible(true);
-        $this->detailpanel->openrefitem->setLink("\\App\\Pages\\Reference\\ItemList", array(0, $this->_item->item_id, 1));
+        $this->detailpanel->openrefitem->setLink("\\App\\Pages\\Reference\\ItemList", array(0, $this->_item->item_id));
         $this->detailpanel->openrefitem->setVisible(\App\ACL::checkShowRef('ItemList'));
         $this->detailpanel->itemdetname->setText($this->_item->itemname);
         $this->detailpanel->stocklist->Reload();

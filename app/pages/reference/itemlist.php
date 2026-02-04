@@ -5,6 +5,7 @@ namespace App\Pages\Reference;
 use App\Entity\Category;
 use App\Entity\Item;
 use App\Entity\ItemSet;
+use App\Entity\Stock;
 use App\Helper as H;
 use App\System;
 use Zippy\Html\DataList\ArrayDataSource;
@@ -19,7 +20,6 @@ use Zippy\Html\Form\TextArea;
 use Zippy\Html\Form\TextInput;
 use Zippy\Html\Label;
 use Zippy\Html\Link\ClickLink;
-use Zippy\Html\Link\RedirectLink;
 use Zippy\Html\Panel;
 use Zippy\Html\Link\SubmitLink;
 use Zippy\Binding\PropertyBinding as Bind;
@@ -36,7 +36,7 @@ class ItemList extends \App\Pages\Base
     public $_cflistv = array();
     public $_itemca = array();
   
-    public function __construct($add = false, $item_id = 0, $back_to_store = 0) {
+    public function __construct($add = false, $item_id = 0) {
         parent::__construct();
         if (false == \App\ACL::checkShowRef('ItemList')) {
             return;
@@ -168,7 +168,8 @@ class ItemList extends \App\Pages\Base
 
         $this->itemdetail->add(new SubmitButton('save'))->onClick($this, 'save');
         $this->itemdetail->add(new Button('cancel'))->onClick($this, 'cancelOnClick');
-        $this->itemdetail->add(new RedirectLink('backtostore', "\\App\\Pages\\Register\\ItemList", array(0, 0)))->setVisible(false);
+        $this->itemdetail->add(new ClickLink('backtostore'))->onClick($this, 'onToStore');
+        $this->itemdetail->backtostore->setVisible(false);
         $this->itemdetail->add(new \ZCL\BT\Tags("edittags"));
         $this->itemdetail->add(new DataView('cflistv', new ArrayDataSource(new Bind($this, '_cflistv')), $this, 'cfvOnRow'));
 
@@ -227,11 +228,6 @@ class ItemList extends \App\Pages\Base
         if (intval($item_id) > 0) {
             $this->openItemById((int)$item_id);
         }
-        if (intval($back_to_store) > 0 && intval($item_id) > 0 && \App\ACL::checkShowReg('ItemList')) {
-            $this->itemdetail->backtostore->setLink("\\App\\Pages\\Register\\ItemList", array($item_id));
-            $this->itemdetail->backtostore->setVisible(true);
-        }
-        
     }
 
     public function itemlistOnRow(\Zippy\Html\DataList\DataRow $row) {
@@ -404,6 +400,7 @@ class ItemList extends \App\Pages\Base
             $this->itemtable->listform->itemlist->setSelectedRow($selectedRow);
             $this->itemtable->listform->itemlist->Reload(false);
         }
+        $this->itemdetail->backtostore->setVisible(\App\ACL::checkShowReg('ItemList'));
 
         $this->filter->searchbrand->setDataList(Item::getManufacturers());
         if (strlen($this->_item->item_code)==0  ) {
@@ -430,6 +427,7 @@ class ItemList extends \App\Pages\Base
         $this->_copy = 0;
         $this->itemtable->setVisible(false);
         $this->itemdetail->setVisible(true);
+        $this->itemdetail->backtostore->setVisible(false);
         // Очищаем  форму
         $this->itemdetail->clean();
         $this->itemdetail->editmsr->setText('шт');
@@ -446,6 +444,25 @@ class ItemList extends \App\Pages\Base
         $this->itemdetail->editcode->setText(Item::getNextArticle());
         $this->itemdetail->editmanufacturer->setDataList(Item::getManufacturers());
 
+    }
+
+    public function onToStore($sender) {
+        if (($this->_item instanceof Item) == false) {
+            return;
+        }
+
+        $where = "item_id = {$this->_item->item_id} and qty <> 0";
+        $cstr = \App\ACL::getStoreBranchConstraint();
+        if (strlen($cstr) > 0 && \App\System::getUser()->showotherstores != 1) {
+            $where .= " and store_id in ({$cstr})";
+        }
+
+        if (Stock::findCnt($where) == 0) {
+            $this->setWarn('Товару немає на складі');
+            return;
+        }
+
+        \App\Application::Redirect("\\App\\Pages\\Register\\ItemList", $this->_item->item_id);
     }
 
     public function cancelOnClick($sender) {
