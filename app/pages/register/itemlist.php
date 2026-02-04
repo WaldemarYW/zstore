@@ -31,7 +31,7 @@ class ItemList extends \App\Pages\Base
     public $_itemb=[];
    
 
-    public function __construct() {
+    public function __construct($item_id = 0) {
         parent::__construct();
         if (false == \App\ACL::checkShowReg('ItemList')) {
             \App\Application::RedirectHome() ;
@@ -134,6 +134,9 @@ class ItemList extends \App\Pages\Base
          
         $this->OnFilter(null);
         $this->_tvars['usecf'] = count($common['cflist']??[]) >0;
+        if (intval($item_id) > 0) {
+            $this->openItemById((int)$item_id);
+        }
                
 
     }
@@ -305,13 +308,19 @@ class ItemList extends \App\Pages\Base
     }
 
     public function showOnClick($sender) {
-        $this->_item = $sender->getOwner()->getDataItem();
+        $this->openItemById((int)$sender->getOwner()->getDataItem()->item_id);
+    }
+
+    private function openItemById($item_id) {
+        $this->_item = Item::load($item_id);
+        if (($this->_item instanceof Item) == false) {
+            return;
+        }
         $options = \App\System::getOptions('common');
-        
-        $item = Item::load($this->_item->item_id);
+
         $this->itempanel->setVisible(false);
         $this->detailpanel->setVisible(true);
-        $this->detailpanel->openrefitem->setLink("\\App\\Pages\\Reference\\ItemList", array(0, $this->_item->item_id));
+        $this->detailpanel->openrefitem->setLink("\\App\\Pages\\Reference\\ItemList", array(0, $this->_item->item_id, 1));
         $this->detailpanel->openrefitem->setVisible(\App\ACL::checkShowRef('ItemList'));
         $this->detailpanel->itemdetname->setText($this->_item->itemname);
         $this->detailpanel->stocklist->Reload();

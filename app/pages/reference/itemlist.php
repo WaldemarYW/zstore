@@ -19,6 +19,7 @@ use Zippy\Html\Form\TextArea;
 use Zippy\Html\Form\TextInput;
 use Zippy\Html\Label;
 use Zippy\Html\Link\ClickLink;
+use Zippy\Html\Link\RedirectLink;
 use Zippy\Html\Panel;
 use Zippy\Html\Link\SubmitLink;
 use Zippy\Binding\PropertyBinding as Bind;
@@ -35,7 +36,7 @@ class ItemList extends \App\Pages\Base
     public $_cflistv = array();
     public $_itemca = array();
   
-    public function __construct($add = false, $item_id = 0) {
+    public function __construct($add = false, $item_id = 0, $back_to_store = 0) {
         parent::__construct();
         if (false == \App\ACL::checkShowRef('ItemList')) {
             return;
@@ -167,6 +168,7 @@ class ItemList extends \App\Pages\Base
 
         $this->itemdetail->add(new SubmitButton('save'))->onClick($this, 'save');
         $this->itemdetail->add(new Button('cancel'))->onClick($this, 'cancelOnClick');
+        $this->itemdetail->add(new RedirectLink('backtostore', "\\App\\Pages\\Register\\ItemList", array(0, 0)))->setVisible(false);
         $this->itemdetail->add(new \ZCL\BT\Tags("edittags"));
         $this->itemdetail->add(new DataView('cflistv', new ArrayDataSource(new Bind($this, '_cflistv')), $this, 'cfvOnRow'));
 
@@ -224,6 +226,10 @@ class ItemList extends \App\Pages\Base
 
         if (intval($item_id) > 0) {
             $this->openItemById((int)$item_id);
+        }
+        if (intval($back_to_store) > 0 && intval($item_id) > 0 && \App\ACL::checkShowReg('ItemList')) {
+            $this->itemdetail->backtostore->setLink("\\App\\Pages\\Register\\ItemList", array($item_id));
+            $this->itemdetail->backtostore->setVisible(true);
         }
         
     }
