@@ -17,6 +17,7 @@ use Zippy\Html\Form\TextInput;
 use Zippy\Html\Form\CheckBox;
 use Zippy\Html\Label;
 use Zippy\Html\Link\ClickLink;
+use Zippy\Html\Link\RedirectLink;
 use Zippy\Html\Panel;
 use App\Application as App;
 
@@ -92,6 +93,7 @@ class ItemList extends \App\Pages\Base
 
         $this->add(new Panel('detailpanel'))->setVisible(false);
         $this->detailpanel->add(new ClickLink('back'))->onClick($this, 'backOnClick');
+        $this->detailpanel->add(new RedirectLink('openrefitem', "\\App\\Pages\\Reference\\ItemList", array(0, 0)));
         $this->detailpanel->add(new Label('itemdetname'));
 
         $this->detailpanel->add(new DataView('stocklist', new DetailDataSource($this), $this, 'detailistOnRow'));
@@ -309,6 +311,8 @@ class ItemList extends \App\Pages\Base
         $item = Item::load($this->_item->item_id);
         $this->itempanel->setVisible(false);
         $this->detailpanel->setVisible(true);
+        $this->detailpanel->openrefitem->setLink("\\App\\Pages\\Reference\\ItemList", array(0, $this->_item->item_id));
+        $this->detailpanel->openrefitem->setVisible(\App\ACL::checkShowRef('ItemList'));
         $this->detailpanel->itemdetname->setText($this->_item->itemname);
         $this->detailpanel->stocklist->Reload();
         

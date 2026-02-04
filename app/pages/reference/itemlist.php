@@ -35,7 +35,7 @@ class ItemList extends \App\Pages\Base
     public $_cflistv = array();
     public $_itemca = array();
   
-    public function __construct($add = false) {
+    public function __construct($add = false, $item_id = 0) {
         parent::__construct();
         if (false == \App\ACL::checkShowRef('ItemList')) {
             return;
@@ -221,6 +221,10 @@ class ItemList extends \App\Pages\Base
         } else {
             $this->addOnClick(null);
         }
+
+        if (intval($item_id) > 0) {
+            $this->openItemById((int)$item_id);
+        }
         
     }
 
@@ -322,7 +326,14 @@ class ItemList extends \App\Pages\Base
     public function editOnClick($sender) {
         $this->_copy = 0;
         $item = $sender->owner->getDataItem();
-        $this->_item = Item::load($item->item_id);
+        $this->openItemById((int)$item->item_id, $sender->getOwner());
+    }
+
+    private function openItemById($item_id, $selectedRow = null) {
+        $this->_item = Item::load($item_id);
+        if (($this->_item instanceof Item) == false) {
+            return;
+        }
 
         $this->itemtable->setVisible(false);
         $this->itemdetail->setVisible(true);
@@ -383,8 +394,10 @@ class ItemList extends \App\Pages\Base
             $this->itemdetail->editimage->setVisible(false);
         }
 
-        $this->itemtable->listform->itemlist->setSelectedRow($sender->getOwner());
-        $this->itemtable->listform->itemlist->Reload(false);
+        if ($selectedRow != null) {
+            $this->itemtable->listform->itemlist->setSelectedRow($selectedRow);
+            $this->itemtable->listform->itemlist->Reload(false);
+        }
 
         $this->filter->searchbrand->setDataList(Item::getManufacturers());
         if (strlen($this->_item->item_code)==0  ) {
