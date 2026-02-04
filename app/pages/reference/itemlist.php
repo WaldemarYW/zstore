@@ -168,6 +168,7 @@ class ItemList extends \App\Pages\Base
 
         $this->itemdetail->add(new SubmitButton('save'))->onClick($this, 'save');
         $this->itemdetail->add(new Button('cancel'))->onClick($this, 'cancelOnClick');
+        $this->itemdetail->add(new ClickLink('googlesearch'))->onClick($this, 'onGoogleSearch', true);
         $this->itemdetail->add(new ClickLink('backtostore'))->onClick($this, 'onToStore');
         $this->itemdetail->backtostore->setVisible(false);
         $this->itemdetail->add(new \ZCL\BT\Tags("edittags"));
@@ -463,6 +464,16 @@ class ItemList extends \App\Pages\Base
         }
 
         \App\Application::Redirect("\\App\\Pages\\Register\\ItemList", $this->_item->item_id);
+    }
+
+    public function onGoogleSearch($sender) {
+        $name = trim($this->itemdetail->editname->getText());
+        if (strlen($name) == 0) {
+            $this->setWarn('Не заповнено найменування');
+            return;
+        }
+        $url = "https://www.google.com/search?q=" . rawurlencode($name);
+        $this->addAjaxResponse("window.open('{$url}','_blank')");
     }
 
     public function cancelOnClick($sender) {
