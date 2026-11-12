@@ -98,6 +98,7 @@ class ItemList extends \App\Pages\Base
         $this->detailpanel->add(new ClickLink('back'))->onClick($this, 'backOnClick');
         $this->detailpanel->add(new RedirectLink('openrefitem', "\\App\\Pages\\Reference\\ItemList", array(0, 0)));
         $this->detailpanel->add(new Label('itemdetname'));
+        $this->detailpanel->add(new Label('itemdetshopcode'));
 
         $this->detailpanel->add(new DataView('stocklist', new DetailDataSource($this), $this, 'detailistOnRow'));
         $this->detailpanel->add(new Form('iformbay'))->onSubmit($this,'OnToPay');
@@ -150,6 +151,7 @@ class ItemList extends \App\Pages\Base
         $emp = $this->filter->searchemp->getValue();
     
         $row->add(new ClickLink('itemname',$this, 'showOnClick'))->setValue($item->itemname);
+        $row->add(new Label('shopcode', $item->shop_code));
    
 
         $row->add(new Label('code', $item->item_code));
@@ -326,6 +328,22 @@ class ItemList extends \App\Pages\Base
         $this->detailpanel->openrefitem->setLink("\\App\\Pages\\Reference\\ItemList", array(0, $this->_item->item_id));
         $this->detailpanel->openrefitem->setVisible(\App\ACL::checkShowRef('ItemList'));
         $this->detailpanel->itemdetname->setText($this->_item->itemname);
+        $sc = strlen($this->_item->shop_code ?? '') > 0 ? '№ ' . $this->_item->shop_code : '';
+        $this->detailpanel->itemdetshopcode->setText($sc);
+        $this->detailpanel->itemdetshopcode->setVisible(strlen($sc) > 0);
+
+        $this->_tvars['custitems'] = [];
+        foreach (\App\Entity\CustItem::find("item_id={$this->_item->item_id}") as $ci) {
+            $this->_tvars['custitems'][] = [
+                'c_name' => $ci->customer_name,
+                'c_code' => $ci->cust_code,
+                'c_barcode' => $ci->bar_code,
+                'c_price' => H::fa($ci->price),
+                'c_date' => $ci->updatedon > 0 ? date('d.m.Y', $ci->updatedon) : ''
+            ];
+        }
+        $this->_tvars['hascustitems'] = count($this->_tvars['custitems']) > 0;
+
         $this->detailpanel->stocklist->Reload();
         
         $store = $this->filter->searchstore->getValue();
@@ -672,16 +690,18 @@ class ItemDataSource implements \Zippy\Interfaces\DataSource
         
         $text = trim($form->searchkey->getText());
         if (strlen($text) > 0) {
-         
+            $text_raw = $text;
             if ($p == false) {
                 $det = Item::qstr('%' . "<cflist>%{$text}%</cflist>" . '%');
+                $det_shop = Item::qstr('%' . "<shop_code><![CDATA[{$text_raw}]]></shop_code>" . '%');
+                $det_shop2 = Item::qstr('%' . "<shop_code>{$text_raw}</shop_code>" . '%');
                 $text = Item::qstr('%' . $text . '%');
-                $where = $where . " and (itemname like {$text} or item_code like {$text}  or bar_code like {$text}  or description like {$text}  or detail like {$det}  )  ";
+                $where = $where . " and (itemname like {$text} or item_code like {$text}  or bar_code like {$text}  or description like {$text}  or detail like {$det} or detail like {$det_shop} or detail like {$det_shop2} )  ";
             } else {
                 $text = Item::qstr($text);
                 $text_ = trim($text,"'") ;
                 
-                $where = $where . " and (itemname = {$text} or item_code = {$text}  or bar_code = {$text}   or detail like '%<bar_code1><![CDATA[{$text_}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$text_}]]></bar_code2>%'  or item_id in (select item_id from store_stock where snumber like {$text} ) or item_id in (select item_id from taglist where  tag_type=3 and tag_name={$text}  ) )   ";
+                $where = $where . " and (itemname = {$text} or item_code = {$text}  or bar_code = {$text}   or detail like '%<bar_code1><![CDATA[{$text_}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$text_}]]></bar_code2>%' or detail like '%<shop_code><![CDATA[{$text_}]]></shop_code>%' or detail like '%<shop_code>{$text_}</shop_code>%'  or item_id in (select item_id from store_stock where snumber like {$text} ) or item_id in (select item_id from taglist where  tag_type=3 and tag_name={$text}  ) )   ";
             }
     
 

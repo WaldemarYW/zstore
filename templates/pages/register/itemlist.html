@@ -119,7 +119,7 @@
                         {{#useimages}}
                         <th></th>
                         {{/useimages}}
-
+                        <th class="text-center" style="width: 75px;">№ маг.</th>
                         <th>Назва</th>
 
 
@@ -161,7 +161,7 @@
 
                         </td>
                         {{/useimages}}
-
+                        <td class="text-center font-weight-bold text-info"><span zippy="shopcode"></span></td>
                         <td ><a zippy="itemname"></a></td>
 
                         <td zippy="code" class=" text-nowrap"></td>
@@ -210,7 +210,10 @@
               <div class="col-12 mb-4">
                 <a zippy="back"> <i class="fa fa-arrow-circle-left"></i> До переліку</a>
                 <a zippy="openrefitem" class="btn btn-outline-primary btn-sm ml-2"><i class="fa fa-external-link-alt"></i> В номенклатуру</a>
-                <h3 zippy="itemdetname"></h3>
+                <div class="d-flex align-items-center mt-2">
+                    <span zippy="itemdetshopcode" class="badge badge-info mr-2" style="font-size: 1.1rem;"></span>
+                    <h3 zippy="itemdetname" class="mb-0"></h3>
+                </div>
                 
             {{^noshowpartion}}                 
                 <h5> Партiї облiку  </h5>
@@ -296,6 +299,36 @@
                </div>
                
                 {{/noshowpartion}} 
+
+                {{#hascustitems}}
+                <div class="col-12 mt-3 pt-3 border-top">
+                    <h5><i class="fa fa-truck text-info"></i> Постачальники, їхні коди та ціни закупки</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Постачальник</th>
+                                    <th>Артикул у постачальника</th>
+                                    <th>Штрих-код</th>
+                                    <th>Остання ціна закупки</th>
+                                    <th>Дата оновлення</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{#custitems}}
+                                <tr>
+                                    <td><b>{{c_name}}</b></td>
+                                    <td><code>{{c_code}}</code></td>
+                                    <td>{{c_barcode}}</td>
+                                    <td class="text-success font-weight-bold">{{c_price}}</td>
+                                    <td>{{c_date}}</td>
+                                </tr>
+                                {{/custitems}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {{/hascustitems}} 
                
              </div>
             </div>

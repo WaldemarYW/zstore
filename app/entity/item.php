@@ -68,6 +68,7 @@ class Item extends \ZCL\DB\Entity
         $this->customsize = (string)$xml->customsize[0];
         $this->manufacturer = (string)$xml->manufacturer[0];
         $this->shortname = (string)$xml->shortname[0];
+        $this->shop_code = (string)$xml->shop_code[0];
         $this->warranty = (string)$xml->warranty[0];
         $this->snumber = (string)$xml->snumber[0];
         $this->extdata = (string)$xml->extdata[0];
@@ -177,6 +178,7 @@ class Item extends \ZCL\DB\Entity
         //   $this->detail .= "<octoreoptions><![CDATA[{$this->octoreoptions}]]></octoreoptions>";
         $this->detail .= "<manufacturer><![CDATA[{$this->manufacturer}]]></manufacturer>";
         $this->detail .= "<shortname><![CDATA[{$this->shortname}]]></shortname>";
+        $this->detail .= "<shop_code><![CDATA[{$this->shop_code}]]></shop_code>";
         $this->detail .= "<warranty><![CDATA[{$this->warranty}]]></warranty>";
         $this->detail .= "<snumber><![CDATA[{$this->warranty}]]></snumber>";
         $this->detail .= "<extdata><![CDATA[{$this->extdata}]]></extdata>";
@@ -799,21 +801,21 @@ class Item extends \ZCL\DB\Entity
 
         if (strlen($partname) > 0) {
             $like = self::qstr('%' . $partname . '%');
-            $partname = self::qstr($partname);
-            $criteria .= "  and  (itemname like {$like} or item_code like {$like}   or   bar_code like {$like} )";
+            $partname_clean = trim($partname, "'% ");
+            $criteria .= "  and  (itemname like {$like} or item_code like {$like}   or   bar_code like {$like} or detail like '%<shop_code><![CDATA[{$partname_clean}]]></shop_code>%' or detail like '%<shop_code>{$partname_clean}</shop_code>%' )";
         }
 
         $itemlist = self::find($criteria);
 
         $list = array();
         foreach ($itemlist as $key => $value) {
-
-            $list[$key] = $value->itemname;
+            $sc = strlen($value->shop_code ?? '') > 0 ? "[#{$value->shop_code}] " : "";
+            $list[$key] = $sc . $value->itemname;
             if (strlen($value->item_code) > 0) {
-                $list[$key] = $value->itemname . ', ' . $value->item_code;
+                $list[$key] = $sc . $value->itemname . ', ' . $value->item_code;
             }
             if (strlen($value->manufacturer) > 0) {
-                $list[$key] = $value->itemname . ' (' . $value->manufacturer . ')';
+                $list[$key] = $sc . $value->itemname . ' (' . $value->manufacturer . ')';
             }
         }
 
@@ -849,9 +851,9 @@ class Item extends \ZCL\DB\Entity
             
             
             if($store_id > 0)  {
-                $item = Item::getFirst($w." item_id in(select item_id from store_stock where store_id={$store_id}) and   (item_code = {$codes} or bar_code = {$codes} or bar_code = {$code0s}   or detail like '%<bar_code1><![CDATA[{$codex}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$codex}]]></bar_code2>%'   or detail like '%<bar_code1><![CDATA[{$code0x}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$code0x}]]></bar_code2>%' )");
+                $item = Item::getFirst($w." item_id in(select item_id from store_stock where store_id={$store_id}) and   (item_code = {$codes} or bar_code = {$codes} or bar_code = {$code0s}   or detail like '%<bar_code1><![CDATA[{$codex}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$codex}]]></bar_code2>%'   or detail like '%<bar_code1><![CDATA[{$code0x}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$code0x}]]></bar_code2>%' or detail like '%<shop_code><![CDATA[{$codex}]]></shop_code>%' or detail like '%<shop_code>{$codex}</shop_code>%' )");
             }   else {
-                $item = Item::getFirst($w."  item_code = {$codes} or bar_code = {$codes} or bar_code = {$code0s}  or detail like '%<bar_code1><![CDATA[{$codex}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$codex}]]></bar_code2>%'   or detail like '%<bar_code1><![CDATA[{$code0x}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$code0x}]]></bar_code2>%'   ");
+                $item = Item::getFirst($w."  item_code = {$codes} or bar_code = {$codes} or bar_code = {$code0s}  or detail like '%<bar_code1><![CDATA[{$codex}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$codex}]]></bar_code2>%'   or detail like '%<bar_code1><![CDATA[{$code0x}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$code0x}]]></bar_code2>%' or detail like '%<shop_code><![CDATA[{$codex}]]></shop_code>%' or detail like '%<shop_code>{$codex}</shop_code>%'   ");
             }
             return $item;
     }
@@ -897,6 +899,49 @@ class Item extends \ZCL\DB\Entity
         }
 
         return $next;
+    }
+
+    /**
+     * Повертає наступний код/номер у магазині (починаючи з 1)
+     */
+    public static function getNextShopCode() {
+        $conn = \ZDB\DB::getConnect();
+        $sql = "select detail from items where detail like '%<shop_code>%'";
+        $max = 0;
+        foreach ($conn->Execute($sql) as $row) {
+            if (preg_match('/<shop_code>(?:<!\[CDATA\[)?(\d+)(?:\]\]>)?<\/shop_code>/', $row['detail'], $m)) {
+                $num = intval($m[1]);
+                if ($num > $max) {
+                    $max = $num;
+                }
+            }
+        }
+        return $max + 1;
+    }
+
+    /**
+     * Нумерує всі наявні товари по порядку (1, 2, 3...)
+     */
+    public static function reindexShopCodes($force = false) {
+        $items = self::find("1=1", "item_id asc");
+        $num = 1;
+        $cnt = 0;
+        foreach ($items as $item) {
+            if ($force || strlen(trim($item->shop_code ?? '')) == 0) {
+                $item->shop_code = (string)$num;
+                $item->save();
+                $cnt++;
+                $num++;
+            } else {
+                $cur = intval($item->shop_code);
+                if ($cur >= $num) {
+                    $num = $cur + 1;
+                } else {
+                    $num++;
+                }
+            }
+        }
+        return $cnt;
     }
 
     /**

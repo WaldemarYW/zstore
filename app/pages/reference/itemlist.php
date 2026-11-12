@@ -6,6 +6,8 @@ use App\Entity\Category;
 use App\Entity\Item;
 use App\Entity\ItemSet;
 use App\Entity\Stock;
+use App\Entity\CustItem;
+use App\Entity\Customer;
 use App\Helper as H;
 use App\System;
 use Zippy\Html\DataList\ArrayDataSource;
@@ -35,6 +37,8 @@ class ItemList extends \App\Pages\Base
     public $_cflist = array();
     public $_cflistv = array();
     public $_itemca = array();
+    public $_custitems = array();
+    private $_custitem = null;
   
     public function __construct($add = false, $item_id = 0) {
         parent::__construct();
@@ -83,6 +87,7 @@ class ItemList extends \App\Pages\Base
         $this->add(new Form('itemdetail'))->setVisible(false);
         $this->itemdetail->add(new TextInput('editname'));
         $this->itemdetail->add(new TextInput('editshortname'));
+        $this->itemdetail->add(new TextInput('editshopcode'));
         $this->itemdetail->add(new TextInput('editprice1'));
         $this->itemdetail->add(new TextInput('editprice2'));
         $this->itemdetail->add(new TextInput('editprice3'));
@@ -212,6 +217,22 @@ class ItemList extends \App\Pages\Base
         $this->optionsform->add(new CheckBox('useimages'));
         $this->optionsform->add(new CheckBox('branchprice'));
         $this->optionsform->add(new TextInput('articleprefix'));
+        $this->optionsform->add(new Button('renumbershopcodes'))->onClick($this, 'onRenumberShopCodes');
+
+        $this->add(new Panel('custitemspanel'))->setVisible(false);
+        $this->custitemspanel->add(new ClickLink('addcustitem'))->onClick($this, 'onAddCustItem');
+        
+        $this->custitemspanel->add(new Form('custitemform'))->setVisible(false);
+        $this->custitemspanel->custitemform->add(new DropDownChoice('ci_customer', Customer::findArray("customer_name", "status=0 and (detail like '%<type>2</type>%' or detail not like '%<type>1</type>%')", "customer_name"), 0));
+        $this->custitemspanel->custitemform->add(new TextInput('ci_custcode'));
+        $this->custitemspanel->custitemform->add(new TextInput('ci_price'));
+        $this->custitemspanel->custitemform->add(new TextInput('ci_custbarcode'));
+        $this->custitemspanel->custitemform->add(new TextInput('ci_comment'));
+        $this->custitemspanel->custitemform->add(new SubmitButton('ci_save'))->onClick($this, 'onSaveCustItem');
+        $this->custitemspanel->custitemform->add(new Button('ci_cancel'))->onClick($this, 'onCancelCustItem');
+
+        $this->custitemspanel->add(new DataView('custitemslist', new ArrayDataSource(new Bind($this, '_custitems')), $this, 'custItemOnRow'));
+        $this->custitemspanel->add(new Label('citem_empty'));
           
      
         $this->_tvars['hp1'] = strlen($common['price1']) > 0 ? $common['price1'] : false;
@@ -237,6 +258,7 @@ class ItemList extends \App\Pages\Base
 
 
         $row->add(new ClickLink('itemname', $this, 'editOnClick'))->setValue($item->itemname);
+        $row->add(new Label('shopcode', $item->shop_code));
 
         $row->add(new Label('code', $item->item_code));
         $row->add(new Label('msr', $item->msr));
@@ -343,6 +365,7 @@ class ItemList extends \App\Pages\Base
 
         $this->itemdetail->editname->setText($this->_item->itemname);
         $this->itemdetail->editshortname->setText($this->_item->shortname);
+        $this->itemdetail->editshopcode->setText($this->_item->shop_code);
         $this->itemdetail->editprice1->setText($this->_item->price1);
         $this->itemdetail->editprice2->setText($this->_item->price2);
         $this->itemdetail->editprice3->setText($this->_item->price3);
@@ -412,6 +435,9 @@ class ItemList extends \App\Pages\Base
         $this->itemdetail->edittags->setSuggestions(\App\Entity\Tag::getSuggestions(\App\Entity\Tag::TYPE_ITEM));
          
         $this->onCat($this->itemdetail->editcat);                 
+
+        $this->reloadCustItems();
+        $this->custitemspanel->custitemform->setVisible(false);
     }
 
     public function onCat($sender) {
@@ -443,7 +469,9 @@ class ItemList extends \App\Pages\Base
         $this->_item = new Item();
 
         $this->itemdetail->editcode->setText(Item::getNextArticle());
+        $this->itemdetail->editshopcode->setText(Item::getNextShopCode());
         $this->itemdetail->editmanufacturer->setDataList(Item::getManufacturers());
+        $this->custitemspanel->setVisible(false);
 
     }
 
@@ -481,7 +509,7 @@ class ItemList extends \App\Pages\Base
         $this->itemdetail->setVisible(false);
         $this->changeall->setVisible(false);
         $this->optionsform->setVisible(false);
-        
+        $this->custitemspanel->setVisible(false);
     }
 
     public function OnFilter($sender) {
@@ -532,6 +560,10 @@ class ItemList extends \App\Pages\Base
         }
         
         $this->_item->shortname = $this->itemdetail->editshortname->getText();
+        $this->_item->shop_code = trim($this->itemdetail->editshopcode->getText());
+        if (strlen($this->_item->shop_code) == 0) {
+            $this->_item->shop_code = (string)Item::getNextShopCode();
+        }
         $this->_item->cat_id = $this->itemdetail->editcat->getValue();
         $this->_item->price1 = $this->itemdetail->editprice1->getText();
         $this->_item->price2 = $this->itemdetail->editprice2->getText();
@@ -1473,6 +1505,103 @@ class ItemList extends \App\Pages\Base
         $this->itemdetail->editnds->setVisible($id==2);
    
     }
+
+    public function custItemOnRow(\Zippy\Html\DataList\DataRow $row) {
+        $ci = $row->getDataItem();
+        $row->add(new Label('citem_customer', $ci->customer_name));
+        $row->add(new Label('citem_code', $ci->cust_code));
+        $row->add(new Label('citem_barcode', $ci->bar_code));
+        $row->add(new Label('citem_price', H::fa($ci->price)));
+        $row->add(new Label('citem_date', $ci->updatedon > 0 ? date('d.m.Y', $ci->updatedon) : ''));
+        $row->add(new Label('citem_comment', $ci->comment));
+        $row->add(new ClickLink('citem_edit', $this, 'onEditCustItem'));
+        $row->add(new ClickLink('citem_del', $this, 'onDelCustItem'));
+    }
+
+    public function reloadCustItems() {
+        if (($this->_item->item_id ?? 0) > 0) {
+            $this->_custitems = CustItem::find("item_id={$this->_item->item_id}", "custitem_id desc");
+            $this->custitemspanel->custitemslist->Reload();
+            $this->custitemspanel->citem_empty->setVisible(count($this->_custitems) == 0);
+            $this->custitemspanel->setVisible(true);
+        } else {
+            $this->_custitems = [];
+            $this->custitemspanel->setVisible(false);
+        }
+    }
+
+    public function onAddCustItem($sender) {
+        $this->_custitem = new CustItem();
+        $this->custitemspanel->custitemform->clean();
+        $this->custitemspanel->custitemform->ci_customer->setOptionList(Customer::findArray("customer_name", "status=0 and (detail like '%<type>2</type>%' or detail not like '%<type>1</type>%')", "customer_name"));
+        $this->custitemspanel->custitemform->setVisible(true);
+    }
+
+    public function onEditCustItem($sender) {
+        $ci = $sender->getOwner()->getDataItem();
+        $this->_custitem = CustItem::load($ci->custitem_id);
+        if ($this->_custitem == null) {
+            return;
+        }
+        $this->custitemspanel->custitemform->ci_customer->setOptionList(Customer::findArray("customer_name", "status=0 and (detail like '%<type>2</type>%' or detail not like '%<type>1</type>%')", "customer_name"));
+        $this->custitemspanel->custitemform->ci_customer->setValue($this->_custitem->customer_id);
+        $this->custitemspanel->custitemform->ci_custcode->setText($this->_custitem->cust_code);
+        $this->custitemspanel->custitemform->ci_custbarcode->setText($this->_custitem->bar_code);
+        $this->custitemspanel->custitemform->ci_price->setText($this->_custitem->price);
+        $this->custitemspanel->custitemform->ci_comment->setText($this->_custitem->comment);
+        $this->custitemspanel->custitemform->setVisible(true);
+    }
+
+    public function onCancelCustItem($sender) {
+        $this->_custitem = null;
+        $this->custitemspanel->custitemform->setVisible(false);
+    }
+
+    public function onSaveCustItem($sender) {
+        $cust_id = intval($this->custitemspanel->custitemform->ci_customer->getValue());
+        if ($cust_id == 0) {
+            $this->setError('Оберіть постачальника');
+            return;
+        }
+        $code = trim($this->custitemspanel->custitemform->ci_custcode->getText());
+        if (strlen($code) == 0) {
+            $this->setError('Введіть артикул постачальника');
+            return;
+        }
+
+        if ($this->_custitem == null) {
+            $this->_custitem = new CustItem();
+        }
+        $this->_custitem->item_id = $this->_item->item_id;
+        $this->_custitem->customer_id = $cust_id;
+        $this->_custitem->cust_code = $code;
+        $this->_custitem->cust_name = $this->_item->itemname;
+        $this->_custitem->brand = $this->_item->manufacturer ?? '';
+        $this->_custitem->store = '';
+        $this->_custitem->bar_code = trim($this->custitemspanel->custitemform->ci_custbarcode->getText());
+        $this->_custitem->price = floatval($this->custitemspanel->custitemform->ci_price->getText());
+        $this->_custitem->comment = trim($this->custitemspanel->custitemform->ci_comment->getText());
+        $this->_custitem->updatedon = time();
+        $this->_custitem->save();
+
+        $this->_custitem = null;
+        $this->custitemspanel->custitemform->setVisible(false);
+        $this->reloadCustItems();
+        $this->setSuccess('Постачальника збережено');
+    }
+
+    public function onDelCustItem($sender) {
+        $ci = $sender->getOwner()->getDataItem();
+        CustItem::delete($ci->custitem_id);
+        $this->reloadCustItems();
+        $this->setSuccess('Постачальника видалено');
+    }
+
+    public function onRenumberShopCodes($sender) {
+        $cnt = Item::reindexShopCodes(true);
+        $this->setSuccess("Успішно пронумеровано {$cnt} товарів (починаючи з 1).");
+        $this->Reload(false);
+    }
      
 }
 
@@ -1541,12 +1670,14 @@ class ItemDataSource implements \Zippy\Interfaces\DataSource
            
             if ($p == false) {
                 $det = Item::qstr('%' . "<cflist>%{$text}%</cflist>" . '%');
+                $det_shop = Item::qstr('%' . "<shop_code><![CDATA[{$text}]]></shop_code>" . '%');
+                $det_shop2 = Item::qstr('%' . "<shop_code>{$text}</shop_code>" . '%');
                 $text = Item::qstr('%' . $text . '%');
-                $where = $where . " and (itemname like {$text} or item_code like {$text}  or bar_code like {$text}  or detail like {$det} )  ";
+                $where = $where . " and (itemname like {$text} or item_code like {$text}  or bar_code like {$text}  or detail like {$det} or detail like {$det_shop} or detail like {$det_shop2} )  ";
             } else {
                 $text = Item::qstr($text);
                 $text_ = trim($text,"'") ;
-                $where = $where . " and (itemname = {$text} or item_code = {$text}  or bar_code = {$text}   or detail like '%<bar_code1><![CDATA[{$text_}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$text_}]]></bar_code2>%'  )  ";
+                $where = $where . " and (itemname = {$text} or item_code = {$text}  or bar_code = {$text}   or detail like '%<bar_code1><![CDATA[{$text_}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$text_}]]></bar_code2>%' or detail like '%<shop_code><![CDATA[{$text_}]]></shop_code>%' or detail like '%<shop_code>{$text_}</shop_code>%' )  ";
             }
         }
         return $where;

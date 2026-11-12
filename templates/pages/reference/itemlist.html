@@ -116,6 +116,7 @@
                             {{#useimages}}
                             <th></th>
                             {{/useimages}}
+                            <th class="text-center" style="width: 75px;">№ маг.</th>
                             <th>Найменування</th>
 
                             <th>Артикул</th>
@@ -156,7 +157,7 @@
 
                             </td>
                             {{/useimages}}
-
+                            <td class="text-center font-weight-bold text-info"><span zippy="shopcode"></span></td>
                             <td ><a zippy="itemname"></a></td>
 
                             <td class="text-nowrap"  zippy="code"></td>
@@ -235,6 +236,16 @@
                                     <input class="form-control" zippy="editshortname"/>
                                  </div>    
                                 
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-5 col-form-label" for="editshopcode">
+                                    <strong>Код у магазині (№)</strong>
+                                    <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top"
+                                       title="Короткий порядковий номер товару в магазині (починаючи з 1). Зручно для швидкого запису на папірці та пошуку."></i>
+                                </label>
+                                <div class="col-7">
+                                    <input style="width: 140px; font-weight: bold; color: #17a2b8;" pattern="[0-9]+" class="form-control" zippy="editshopcode"/>
+                                </div>    
                             </div>
                             <div class="form-group row">
                                 <label class="col-5 col-form-label" for="editcat">Категорія</label>
@@ -601,6 +612,88 @@
                     </div>
                 </form>
 
+                <div class="card card-outline card-info shadow-sm mt-3" zippy="custitemspanel">
+                    <div class="card-header d-flex flex-wrap align-items-center py-2">
+                        <h5 class="card-title mb-0 mr-auto"><i class="fa fa-truck mr-1 text-info"></i> Постачальники, їхні артикули та ціни</h5>
+                        <a zippy="addcustitem" class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Додати постачальника</a>
+                    </div>
+                    <div class="card-body p-3">
+                        <form zippy="custitemform" class="card card-body bg-light mb-3 border">
+                            <div class="row">
+                                <div class="col-12 col-md-4">
+                                    <div class="form-group mb-2">
+                                        <label for="ci_customer"><strong>Постачальник *</strong></label>
+                                        <select class="form-control" zippy="ci_customer">
+                                            <option value="0">Обрати постачальника...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-3">
+                                    <div class="form-group mb-2">
+                                        <label for="ci_custcode"><strong>Артикул постачальника *</strong></label>
+                                        <input class="form-control" zippy="ci_custcode" placeholder="Код у постачальника"/>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-2">
+                                    <div class="form-group mb-2">
+                                        <label for="ci_price"><strong>Ціна закупки</strong></label>
+                                        <input pattern="[0-9,\.]+" class="form-control qtyprice" zippy="ci_price" placeholder="0.00"/>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-3">
+                                    <div class="form-group mb-2">
+                                        <label for="ci_custbarcode">Штрих-код постачальника</label>
+                                        <input class="form-control" zippy="ci_custbarcode"/>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-8">
+                                    <div class="form-group mb-2">
+                                        <label for="ci_comment">Примітка / назва у накладній постачальника</label>
+                                        <input class="form-control" zippy="ci_comment" placeholder="Як називається в документах постачальника"/>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-4 d-flex align-items-end mb-2">
+                                    <input zippy="ci_save" type="submit" value="Зберегти постачальника" class="btn btn-primary mr-2"/>
+                                    <input zippy="ci_cancel" type="button" value="Скасувати" class="btn btn-outline-secondary"/>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover table-striped mb-0">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Постачальник</th>
+                                        <th>Артикул у постачальника</th>
+                                        <th>Штрих-код</th>
+                                        <th>Ціна закупки (остання)</th>
+                                        <th>Дата оновлення</th>
+                                        <th>Примітка</th>
+                                        <th style="width: 80px;" class="text-right">Дії</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr zippy="custitemslist">
+                                        <td zippy="citem_customer" class="font-weight-bold"></td>
+                                        <td zippy="citem_code"><code></code></td>
+                                        <td zippy="citem_barcode"></td>
+                                        <td zippy="citem_price" class="text-bold text-success"></td>
+                                        <td zippy="citem_date"></td>
+                                        <td zippy="citem_comment" class="text-muted small"></td>
+                                        <td class="text-right">
+                                            <a zippy="citem_edit" title="Редагувати" class="mr-2 text-info" style="cursor:pointer;"><i class="fa fa-edit"></i></a>
+                                            <a zippy="citem_del" title="Видалити" class="text-danger" style="cursor:pointer;"><i class="fa fa-trash"></i></a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div zippy="citem_empty" class="text-center text-muted py-3">
+                            <em>Немає доданих постачальників для цього товару. Натисніть «Додати постачальника», щоб закріпити артикул та ціну.</em>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
           <div class="col-12 col-md-6 col-xl-4 ">
@@ -773,6 +866,13 @@
                             <td><a zippy="delcf"> <i class="fa fa-trash"></i></a></td>
                          </tr>    
                       </table>                       
+
+                        <div class="form-group mt-3 pt-3 border-top">
+                            <label class="font-weight-bold">Нумерація товарів у магазині</label><br>
+                            <input zippy="renumbershopcodes" type="button" value="Пронумерувати всі товари (1, 2, 3...)" class="btn btn-outline-info btn-sm">
+                            <small class="form-text text-muted">Призначить послідовні короткі номери (1, 2, 3...) всім наявним товарам у базі по порядку їх створення.</small>
+                        </div>
+
                         <div class="form-group mt-2">
                                 <input zippy="cancelc" type="button" value="Скасувати" class="btn btn-outline-secondary mr-2 "> 
                                 <input zippy="savec" type="submit" value="Зберегти" class="btn btn-primary  ">
