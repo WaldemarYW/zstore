@@ -224,6 +224,9 @@ class PrintHandler(BaseHTTPRequestHandler):
 
             for chunk in job_chunks:
                 send_to_windows_printer(PRINTER_NAME, chunk)
+                if len(job_chunks) > 1:
+                    import time
+                    time.sleep(0.35)
 
             self.send_response(200)
             self._set_cors_headers()
