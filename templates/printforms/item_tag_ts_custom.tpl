@@ -1,5 +1,5 @@
 SIZE 30 mm, 20 mm
-GAP 4.8 mm, 0 mm
+GAP 5.8 mm, 0 mm
 DIRECTION 0
 CLS
 TEXT 15,14,"1",0,1,1,"{{name1}}"
