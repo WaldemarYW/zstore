@@ -1,12 +1,11 @@
-SIZE 30mm,20mm
-CLS   
-DIRECTION 1    
-REM BOX 3,3,294,194,2
-TEXT 30,30,"3",0,3,3,"{{price}}"
-TEXT 30,100,"2",0,2,2,"{{article}}"
+SIZE 30 mm, 20 mm
+GAP 3 mm, 0 mm
+DIRECTION 1
+CLS
+TEXT 15,10,"1",0,1,1,"{{name1}}"
+TEXT 15,24,"1",0,1,1,"{{name2}}"
 {{#isbarcode}}
-BARCODE 30,120,"128",72,1,0,2,4,"{{barcode}}"
+BARCODE 25,46,"128",52,0,0,3,3,"{{barcode}}"
 {{/isbarcode}}
+TEXT 65,112,"3",0,1,1,"# {{shop_code}}"
 PRINT 1,1
-
-

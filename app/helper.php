@@ -1111,6 +1111,20 @@ class Helper
 
             $header['name'] = str_replace("'", "`", $header['name']);
             $header['description'] = str_replace("'", "`", $item->description);
+            
+            $wname = mb_strimwidth($header['name'], 0, 52, '');
+            $words = explode(' ', $wname);
+            $l1 = '';
+            $l2 = '';
+            foreach($words as $w) {
+                if(mb_strlen(trim($l1 . ' ' . $w)) <= 24) {
+                    $l1 = trim($l1 . ' ' . $w);
+                } else {
+                    $l2 = trim($l2 . ' ' . $w);
+                }
+            }
+            $header['name1'] = mb_strimwidth($l1, 0, 24, '');
+            $header['name2'] = mb_strimwidth($l2, 0, 24, '');
 
             $header['docnumber'] = $tags['docnumber'] ?? "";
 
@@ -1122,6 +1136,11 @@ class Helper
 
 
             $header['article'] = $item->item_code;
+            $shop_code = trim($item->shop_code ?? '');
+            if(strlen($shop_code) == 0) {
+                $shop_code = $item->item_code;
+            }
+            $header['shop_code'] = $shop_code;
             $header['garterm'] = $item->warranty;
             $header['country'] = $item->country;
             $header['brand'] = $item->manufacturer;
@@ -1150,14 +1169,14 @@ class Helper
             }
 
 
+            $barcode = $item->bar_code;
+            if(strlen($barcode) == 0) {
+                $barcode = strlen($item->shop_code ?? '') > 0 ? $item->shop_code : $item->item_code;
+            }   
+            $header['barcode'] = $barcode;
+            $header['isbarcode'] = true;                 
+            
             if($printer['pbarcode'] == 1) {
-
-                $barcode = $item->bar_code;
-                if(strlen($barcode) == 0) {
-                    $barcode = $item->item_code;
-                }   
-                $header['barcode'] = $barcode;
-                $header['isbarcode'] = true;                 
                 
                 if(strlen($barcode) > 0) {
                    if($user->prtypelabel == 0) {
