@@ -1,5 +1,7 @@
 SIZE 30 mm, 20 mm
-GAP 6.4 mm, 0 mm
+GAP 5.3 mm, 0 mm
+SPEED 4
+DENSITY 8
 SHIFT -8
 DIRECTION 0
 CLS
