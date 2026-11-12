@@ -164,6 +164,9 @@ class Item extends \ZCL\DB\Entity
          }
             
         }
+        if (strlen(trim($this->shop_code ?? '')) == 0) {
+            $this->shop_code = (string)self::getNextShopCode();
+        }
         $this->detail = "<detail>";
         //упаковываем  данные в detail
         $this->detail .= "<isweight>{$this->isweight}</isweight>";
