@@ -805,10 +805,22 @@ class Item extends \ZCL\DB\Entity
         if (strlen($partname) > 0) {
             $like = self::qstr('%' . $partname . '%');
             $partname_clean = trim($partname, "'% ");
-            $criteria .= "  and  (itemname like {$like} or item_code like {$like}   or   bar_code like {$like} or detail like '%<shop_code><![CDATA[{$partname_clean}]]></shop_code>%' or detail like '%<shop_code>{$partname_clean}</shop_code>%' )";
+            $num_code = preg_replace('/^[#№Nn\s]+/', '', $partname_clean);
+            $num_cond = "";
+            if (strlen($num_code) > 0) {
+                $num_cond = " or detail like '%<shop_code><![CDATA[{$num_code}]]></shop_code>%' or detail like '%<shop_code>{$num_code}</shop_code>%'";
+            }
+            $criteria .= "  and  (itemname like {$like} or item_code like {$like}   or   bar_code like {$like} or detail like '%<shop_code><![CDATA[{$partname_clean}]]></shop_code>%' or detail like '%<shop_code>{$partname_clean}</shop_code>%' {$num_cond} )";
         }
 
         $itemlist = self::find($criteria);
+        if (isset($num_code) && strlen($num_code) > 0) {
+            uasort($itemlist, function($a, $b) use ($num_code) {
+                $a_exact = (($a->shop_code ?? '') === $num_code) ? 1 : 0;
+                $b_exact = (($b->shop_code ?? '') === $num_code) ? 1 : 0;
+                return $b_exact - $a_exact;
+            });
+        }
 
         $list = array();
         foreach ($itemlist as $key => $value) {
@@ -833,11 +845,19 @@ class Item extends \ZCL\DB\Entity
     * @param mixed $cat_id
     */
     public static function findBarCode($code, $store_id = 0,$cat_id=0) {
-            $code0 = ltrim($code, '0');
-            $codes = Item::qstr($code) ;
+            $code_clean = trim($code);
+            $code0 = ltrim($code_clean, '0');
+            $num_code = preg_replace('/^[#№Nn\s]+/', '', $code_clean);
+            $codes = Item::qstr($code_clean) ;
             $code0s = Item::qstr($code0) ;
             $codex= trim($codes,"'") ;
             $code0x= trim($code0s,"'") ;
+            $numx = trim(Item::qstr($num_code), "'");
+            
+            $shop_cond = "detail like '%<shop_code><![CDATA[{$codex}]]></shop_code>%' or detail like '%<shop_code>{$codex}</shop_code>%'";
+            if (strlen($numx) > 0) {
+                $shop_cond .= " or detail like '%<shop_code><![CDATA[{$numx}]]></shop_code>%' or detail like '%<shop_code>{$numx}</shop_code>%'";
+            }
             
             $w='';
             if ($cat_id > 0) {
@@ -854,9 +874,9 @@ class Item extends \ZCL\DB\Entity
             
             
             if($store_id > 0)  {
-                $item = Item::getFirst($w." item_id in(select item_id from store_stock where store_id={$store_id}) and   (item_code = {$codes} or bar_code = {$codes} or bar_code = {$code0s}   or detail like '%<bar_code1><![CDATA[{$codex}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$codex}]]></bar_code2>%'   or detail like '%<bar_code1><![CDATA[{$code0x}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$code0x}]]></bar_code2>%' or detail like '%<shop_code><![CDATA[{$codex}]]></shop_code>%' or detail like '%<shop_code>{$codex}</shop_code>%' )");
+                $item = Item::getFirst($w." item_id in(select item_id from store_stock where store_id={$store_id}) and   (item_code = {$codes} or bar_code = {$codes} or bar_code = {$code0s}   or detail like '%<bar_code1><![CDATA[{$codex}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$codex}]]></bar_code2>%'   or detail like '%<bar_code1><![CDATA[{$code0x}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$code0x}]]></bar_code2>%' or {$shop_cond} )");
             }   else {
-                $item = Item::getFirst($w."  item_code = {$codes} or bar_code = {$codes} or bar_code = {$code0s}  or detail like '%<bar_code1><![CDATA[{$codex}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$codex}]]></bar_code2>%'   or detail like '%<bar_code1><![CDATA[{$code0x}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$code0x}]]></bar_code2>%' or detail like '%<shop_code><![CDATA[{$codex}]]></shop_code>%' or detail like '%<shop_code>{$codex}</shop_code>%'   ");
+                $item = Item::getFirst($w."  item_code = {$codes} or bar_code = {$codes} or bar_code = {$code0s}  or detail like '%<bar_code1><![CDATA[{$codex}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$codex}]]></bar_code2>%'   or detail like '%<bar_code1><![CDATA[{$code0x}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$code0x}]]></bar_code2>%' or {$shop_cond}   ");
             }
             return $item;
     }

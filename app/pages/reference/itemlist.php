@@ -1667,17 +1667,23 @@ class ItemDataSource implements \Zippy\Interfaces\DataSource
         }
 
         if (strlen($text) > 0) {
-           
+            $num_code = preg_replace('/^[#№Nn\s]+/', '', $text);
+            $num_cond = "";
+            if (strlen($num_code) > 0) {
+                $det_num = Item::qstr('%' . "<shop_code><![CDATA[{$num_code}]]></shop_code>" . '%');
+                $det_num2 = Item::qstr('%' . "<shop_code>{$num_code}</shop_code>" . '%');
+                $num_cond = " or detail like {$det_num} or detail like {$det_num2} ";
+            }
             if ($p == false) {
                 $det = Item::qstr('%' . "<cflist>%{$text}%</cflist>" . '%');
                 $det_shop = Item::qstr('%' . "<shop_code><![CDATA[{$text}]]></shop_code>" . '%');
                 $det_shop2 = Item::qstr('%' . "<shop_code>{$text}</shop_code>" . '%');
-                $text = Item::qstr('%' . $text . '%');
-                $where = $where . " and (itemname like {$text} or item_code like {$text}  or bar_code like {$text}  or detail like {$det} or detail like {$det_shop} or detail like {$det_shop2} )  ";
+                $text_like = Item::qstr('%' . $text . '%');
+                $where = $where . " and (itemname like {$text_like} or item_code like {$text_like}  or bar_code like {$text_like}  or detail like {$det} or detail like {$det_shop} or detail like {$det_shop2} {$num_cond} )  ";
             } else {
-                $text = Item::qstr($text);
-                $text_ = trim($text,"'") ;
-                $where = $where . " and (itemname = {$text} or item_code = {$text}  or bar_code = {$text}   or detail like '%<bar_code1><![CDATA[{$text_}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$text_}]]></bar_code2>%' or detail like '%<shop_code><![CDATA[{$text_}]]></shop_code>%' or detail like '%<shop_code>{$text_}</shop_code>%' )  ";
+                $text_quoted = Item::qstr($text);
+                $text_ = trim($text_quoted,"'") ;
+                $where = $where . " and (itemname = {$text_quoted} or item_code = {$text_quoted}  or bar_code = {$text_quoted}   or detail like '%<bar_code1><![CDATA[{$text_}]]></bar_code1>%'   or detail like '%<bar_code2><![CDATA[{$text_}]]></bar_code2>%' or detail like '%<shop_code><![CDATA[{$text_}]]></shop_code>%' or detail like '%<shop_code>{$text_}</shop_code>%' {$num_cond} )  ";
             }
         }
         return $where;
